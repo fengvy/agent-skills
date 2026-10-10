@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+
+# 临时产物
+*.tmp
+*.log
