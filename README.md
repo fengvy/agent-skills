@@ -6,11 +6,11 @@
 
 | 技能 | 用途 | 产出 |
 | --- | --- | --- |
-| [`fxy-html-to-prd-v1`](./fxy-html-to-prd-v1/) | 从已有产品原型 HTML **反向推导**结构化 PRD | 主 PRD（人读）+ 实现规格（AI 读） |
+| [`fxy-html-to-prd-v1`](./fxy-html-to-prd-v1/) | 从已有产品原型 HTML **反向推导**项目级结构化 PRD（多端按端增量追加，跨端关系入第六章） | 项目级 PRD |
 
 ## 安装到本机
 
-技能是纯文件，WorkBuddy 从用户级技能目录加载。**把这个仓库克隆到临时位置，再把需要的技能目录放进技能目录**：
+技能是纯文件，从用户级技能目录加载（WorkBuddy 为 `~/.workbuddy/skills/`，Qoder 为 `~/.qoder-cn/skills/`）。**把这个仓库克隆到临时位置，再把需要的技能目录放进技能目录**：
 
 ```bash
 # 1) 克隆
@@ -22,14 +22,20 @@ cp -R ~/agent-skills/fxy-html-to-prd-v1 ~/.workbuddy/skills/
 
 # 3) 验证：SKILL.md 必须在该目录根部
 ls ~/.workbuddy/skills/fxy-html-to-prd-v1/SKILL.md
+# Qoder 环境：把上面的 ~/.workbuddy/skills 换成 ~/.qoder-cn/skills
 ```
 
-> ⚠️ **目录名必须与技能名一致**（`fxy-html-to-prd-v1`），且 `SKILL.md` 位于该目录根部 —— WorkBuddy 靠这个结构识别技能。
+> ⚠️ **目录名必须与技能名一致**（`fxy-html-to-prd-v1`），且 `SKILL.md` 位于该目录根部 —— Agent 靠这个结构识别技能。
 
 **更省事的做法（推荐给「本机开发 + 多设备使用」）**：用软链接代替拷贝，这样 `git pull` 后本机技能立即更新，不必反复复制：
 
 ```bash
+# WorkBuddy：
+mkdir -p ~/.workbuddy/skills
 ln -s ~/agent-skills/fxy-html-to-prd-v1 ~/.workbuddy/skills/fxy-html-to-prd-v1
+# Qoder：
+mkdir -p ~/.qoder-cn/skills
+ln -s ~/agent-skills/fxy-html-to-prd-v1 ~/.qoder-cn/skills/fxy-html-to-prd-v1
 ```
 
 ## 更新本机已装技能

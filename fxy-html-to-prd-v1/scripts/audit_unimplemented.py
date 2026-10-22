@@ -6,7 +6,7 @@
 真实存在的功能。漏写是消极错误，误判是积极错误。
 
 用法:
-    python3 audit_unimplemented.py <原型.html> <PRD.md 或 实现规格.md> [--show-ok] [--claims-only]
+    python3 audit_unimplemented.py <原型.html> <PRD.md> [--section 端名] [--show-ok] [--claims-only]
 
 ## 设计要点：为什么不能只数「引用」
 
@@ -37,9 +37,13 @@ import re
 import sys
 from pathlib import Path
 
+from _prd_end_view import SectionError, build_view
+
 ap = argparse.ArgumentParser()
 ap.add_argument("prototype", help="原型 HTML 路径")
-ap.add_argument("doc", help="PRD 或实现规格 Markdown 路径")
+ap.add_argument("doc", help="PRD Markdown 路径")
+ap.add_argument("--section", metavar="端名",
+                help="只对指定端对账：第五章取该端分节，第三/六章表格只留该端行")
 ap.add_argument("--show-ok", action="store_true", help="同时列出判定为一致的声明")
 ap.add_argument("--claims-only", action="store_true", help="只列出声明行，不做核验")
 a = ap.parse_args()
@@ -49,9 +53,17 @@ try:
 except OSError as exc:
     sys.exit(f"读不到原型 {a.prototype}: {exc}")
 try:
-    doc_lines = Path(a.doc).read_text(encoding="utf-8").splitlines()
+    raw_lines = Path(a.doc).read_text(encoding="utf-8").splitlines()
 except OSError as exc:
     sys.exit(f"读不到文档 {a.doc}: {exc}")
+
+if a.section:
+    try:
+        doc_lines = build_view(raw_lines, a.section)
+    except SectionError as exc:
+        sys.exit(f"{a.doc}: {exc}")
+else:
+    doc_lines = list(enumerate(raw_lines, 1))
 
 CLAIM_KW = ["未实现", "未接线", "未生效", "不生效", "不回写", "未绑定", "无事件绑定",
             "占位", "死代码", "演示态", "未设计", "未提供", "未暴露", "未打通", "未落地"]
@@ -104,17 +116,17 @@ def context(name, n=2):
     return out
 
 
-def find_claims():
+def find_claims(lines):
     out = []
-    for i, line in enumerate(doc_lines, 1):
+    for ln, line in lines:
         if not any(k in line for k in CLAIM_KW):
             continue
         ids = [x for x in re.findall(r"`([A-Za-z_$][\w$]*)`", line) if len(x) >= 2]
-        out.append((i, line.strip(), ids))
+        out.append((ln, line.strip(), ids))
     return out
 
 
-claims = find_claims()
+claims = find_claims(doc_lines)
 
 if a.claims_only:
     print(f"共 {len(claims)} 条「未实现类」声明：\n")
@@ -124,6 +136,8 @@ if a.claims_only:
     sys.exit(0)
 
 print(f"文档: {a.doc}")
+if a.section:
+    print(f"端视图: {a.section}（保留 {len(doc_lines)}/{len(raw_lines)} 行）")
 print(f"原型: {a.prototype}  ({len(src)} 字符)")
 print(f"\n共 {len(claims)} 条「未实现类」声明\n")
 

@@ -6,7 +6,7 @@
 凡是文案在 PRD 里找不到的，要么是真遗漏，要么只是没引按钮原文 —— 逐条判定即可。
 
 用法:
-    python3 audit_coverage.py <原型.html> <PRD.md> [--min-len N] [--show-covered]
+    python3 audit_coverage.py <原型.html> <PRD.md> [--section 端名] [--min-len N] [--show-covered]
 
 输出:
     总数 / 已覆盖 / 未覆盖，随后列出未覆盖清单（文案 + 触发它的处理器函数名）。
@@ -22,9 +22,13 @@ import re
 import sys
 from pathlib import Path
 
+from _prd_end_view import SectionError, build_view
+
 ap = argparse.ArgumentParser()
 ap.add_argument("prototype", help="原型 HTML 路径")
 ap.add_argument("prd", help="已写好的 PRD Markdown 路径")
+ap.add_argument("--section", metavar="端名",
+                help="只对指定端对账：第五章取该端分节，第三/六章表格只留该端行")
 ap.add_argument("--min-len", type=int, default=2, help="文案最短长度（默认 2，过滤单字符噪声）")
 ap.add_argument("--show-covered", action="store_true", help="同时列出已覆盖项")
 a = ap.parse_args()
@@ -34,9 +38,19 @@ try:
 except OSError as exc:
     sys.exit(f"读不到原型 {a.prototype}: {exc}")
 try:
-    prd = Path(a.prd).read_text(encoding="utf-8")
+    doc_lines = Path(a.prd).read_text(encoding="utf-8").splitlines()
 except OSError as exc:
     sys.exit(f"读不到 PRD {a.prd}: {exc}")
+
+if a.section:
+    try:
+        view = build_view(doc_lines, a.section)
+    except SectionError as exc:
+        sys.exit(f"{a.prd}: {exc}")
+    prd = "\n".join(text for _, text in view)
+    print(f"端视图「{a.section}」：保留 {len(view)}/{len(doc_lines)} 行\n")
+else:
+    prd = "\n".join(doc_lines)
 
 PREFIX = r"^[＋+✎🗑📱⟳←→↑↓✔🔒🤖📄✨·\-\s]+"
 
